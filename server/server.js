@@ -59,18 +59,28 @@ const videoType = new GraphQLObjectType({
   }
 });
 
+function getVideos(id) {
+  let model = loopback.getModel('Video');
+  return new Promise(resolve=> {
+    model.find({where:{ id: id }}, (err, data) => {
+      return resolve(data[0]);
+    });
+  });
+}
+
+
 const queryType = new GraphQLObjectType({
   name: 'QueryType',
   description: 'The root query type',
   fields: {
     video: {
       type: videoType,
-      resolve: ()=> new Promise(resolve=>resolve({
-        id: 'a',
-        title: 'Graphql a',
-        duration: 100,
-        watched:false
-      }))
+      args: {
+        id: {
+          type: GraphQLID
+        }
+      },
+      resolve: (_, args)=> getVideos(args.id)
     }
   }
 });
@@ -78,30 +88,6 @@ const queryType = new GraphQLObjectType({
 const schema =  new GraphQLSchema( {
   query: queryType
 });
-
-const videoA = {
-    id: 'a',
-
-    title: 'bar',
-    duration: 1131,
-    watched: false
-};
-
-const videoB = {
-    id: 'b',
-    title: 'bar',
-    duration: 1131,
-    watched: true
-};
-const resolvers = {
-  video: ()=>({
-    id: '1',
-    title: 'bar',
-    duration: 1131,
-    watched: false
-  }),
-  videos: () => [videoA, videoB]
-};
 
 app.use('/graphql', graphqlHTTPServer({
   schema,

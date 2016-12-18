@@ -31,5 +31,9 @@
   "Role": {
     "dataSource": "db",
     "public": false
+  },
+  "Video": {
+    "dataSource": "db",
+    "public": true
   }
 }
