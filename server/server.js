@@ -6,6 +6,8 @@ const graphqlHTTPServer = require('express-graphql');
 const {
   graphql,
   buildSchema ,
+  GraphQLNonNull,
+  GraphQLList,
   GraphQLSchema,
   GraphQLID,
   GraphQLString,
@@ -59,11 +61,20 @@ const videoType = new GraphQLObjectType({
   }
 });
 
-function getVideos(id) {
+function getVideoById(id) {
   let model = loopback.getModel('Video');
   return new Promise(resolve=> {
     model.find({where:{ id: id }}, (err, data) => {
       return resolve(data[0]);
+    });
+  });
+}
+
+function getVideos() {
+  let model = loopback.getModel('Video');
+  return new Promise(resolve=> {
+    model.find({}, (err, data) => {
+      return resolve(data);
     });
   });
 }
@@ -77,10 +88,14 @@ const queryType = new GraphQLObjectType({
       type: videoType,
       args: {
         id: {
-          type: GraphQLID
+          type: new GraphQLNonNull(GraphQLID)
         }
       },
-      resolve: (_, args)=> getVideos(args.id)
+      resolve: (_, args)=> getVideoById(args.id)
+    },
+    videos: {
+      type: new GraphQLList(videoType),
+      resolve: getVideos
     }
   }
 });
@@ -91,6 +106,5 @@ const schema =  new GraphQLSchema( {
 
 app.use('/graphql', graphqlHTTPServer({
   schema,
-  graphiql: true,
-  rootValue: resolvers
+  graphiql: true
 }))
